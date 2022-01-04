@@ -8,6 +8,7 @@ $results = $db->query($sql);
 #print_r($results);
 
 $row = $results->fetch_all(MYSQLI_ASSOC);
+$ms = '';
 
 #print_r($row);
 
@@ -20,15 +21,29 @@ if(isset($_POST['submit'])){
   $role = $_POST['role'];
   $dept_ID = $_POST['dept_ID'];
   $address = $_POST['address'];
+  $phone = $_POST['phone'];
   $id = time();
 
   $password = password_hash($password, PASSWORD_DEFAULT);
+//check email
+  $sql = "Select * from users where email = '$email'";
+  $results = $db->query($sql);
+  $row = $results->num_rows;
+  if($row > 0){
+    $ms =  'Email already existed';
+  }else{
+    $sql = "INSERT INTO users (id, fullname, email, dept_ID, phone,password, role, address) VALUES (?,?,?,?,?,?,?,?)";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param('ississss', $id, $fullname, $email, $dept_ID, $phone,$password, $role, $address);
+    $stmt->execute();
+    $ms = 'Add user success';
+  }
 
-  $sql = "INSERT INTO users (id, fullname, email, dept_ID, password, role, address)
-   VALUES ($id, '$fullname', '$email', '$dept_ID', '$password', '$role', '$address')";
 
-  $db->query($sql);
-  echo 'add user success';
+ /* $sql = "INSERT INTO users (id, fullname, email, dept_ID, phone, password, role, address)
+   VALUES ($id, '$fullname', '$email', '$dept_ID', '$phone','$password', '$role', '$address')";
+
+  $db->query($sql);*/
 }
 
 ?>
@@ -40,6 +55,7 @@ if(isset($_POST['submit'])){
   <input type="text" name="fullname" placeholder="Fullname">
   <input type="text"  name="email"  placeholder="Email">
   <input type="text"  name="password"  placeholder="password">
+  <input type="text"  name="phone"  placeholder="Phone">
   <select name="role">
     <option value="user">User</option>
     <option value="manager">Manager</option>
@@ -54,8 +70,13 @@ if(isset($_POST['submit'])){
     ?>
   </select>
   <textarea name="address"  name=""  placeholder="Address"></textarea>
+  <div class='alert'>
+  <?php
+  echo $ms;
+  ?>
+  </div>
   <a href="<?php echo BASE_URL ?>/user">Cancel</a>
-  <button type="submit"  name="submit" value="Add user">submit</button>
+  <button type="submit"  name="submit" value="Add user">Submit</button>
 </form>
 
 <style>
@@ -66,5 +87,11 @@ if(isset($_POST['submit'])){
   form input, form select, form textarea{
     display: block;
     margin-bottom: 10px;
+  }
+  .alert{
+    background: #f00;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
   }
 </style>
